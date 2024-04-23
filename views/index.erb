@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro de Eventos Culturest</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script>
+      function registrarExpediente(event) {
+        event.preventDefault(); // Evitar el envío del formulario de forma predeterminada
+
+        var expediente = document.getElementById('expediente').value;
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/register', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            var respuesta = xhr.responseText;
+            document.getElementById('respuesta').innerText = respuesta;
+          }
+        };
+        xhr.send('expediente=' + encodeURIComponent(expediente));
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="titulo">
+      <img class="logos" src="/images/Escudo_Unison.png" alt="Logo UNISON" />
+      <h1>Registro de Eventos Culturest</h1>
+      <img class="logos" src="/images/LOGO_CULTUREST.png" alt="Logo CULTUREST" />
+    </div>
+
+    <div id="fecha"><%= @current_date %></div>
+
+    <div class="conferencia">
+      <h2>Eventos</h2>
+      <h3>Hackathon 2025</h3>
+    </div>
+
+    <div class="expediente">
+      <h4>Lea el expediente del alumno</h4>
+      <form onsubmit="registrarExpediente(event)">
+        <input type="text" id="expediente" placeholder="Ingrese su expediente" autofocus required />
+        <input type="submit" value="Registrar" />
+      </form>
+      <p id="respuesta"></p>
+    </div>
+  </body>
+</html>

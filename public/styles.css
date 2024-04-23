@@ -1,0 +1,37 @@
+.logos {
+  width: 100px;
+  height: 100px;
+  margin-right: 10px;
+}
+.titulo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#fecha {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+}
+.conferencia {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 2px;
+  margin-bottom: 5px;
+}
+.expediente {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  margin-bottom: 5px;
+}
+
+body {
+  font-family: "Asap Condensed", sans-serif;
+  font-weight: 400;
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cargar archivo con Ruby</title>
+</head>
+<body>
+  <h1>Cargar archivo con Ruby</h1>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" id="file" style="display: none;">
+    <button type="button" onclick="document.getElementById('file').click();">Seleccionar y Cargar Archivo</button>
+  </form>
+  <br><br>
+  <p>Contenido del archivo:</p>
+  <pre id="resultado"></pre>
+
+  <button onclick="generar('csv')">CSV</button>
+  <button onclick="generar('json')">JSON</button>
+  <button onclick="generar('sql')">SQL</button>
+  <button onclick="generar('xml')">XML</button>
+
+  <script>
+    function generar(format) {
+      var data = document.getElementById('resultado').innerText.trim();
+      if (data === "") {
+        alert("No hay datos para generar el archivo.");
+        return;
+      }
+      var form = document.createElement('form');
+      form.setAttribute('method', 'get');
+      form.setAttribute('action', '/generate/' + format);
+      form.style.display = 'none';
+      var inputData = document.createElement('input');
+      inputData.setAttribute('type', 'hidden');
+      inputData.setAttribute('name', 'data');
+      inputData.setAttribute('value', data);
+      form.appendChild(inputData);
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    window.onload = function () {
+      document.getElementById("file").onchange = function (event) {
+        var file = event.target.files[0];
+        var reader = new FileReader();
+        reader.onload = function (event) {
+          var contenido = event.target.result;
+          document.getElementById("resultado").innerText = contenido;
+        };
+        reader.readAsText(file);
+      };
+    };
+  </script>
+</body>
+</html>

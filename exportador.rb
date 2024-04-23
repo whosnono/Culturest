@@ -1,85 +1,61 @@
 require 'sinatra'
-require 'json'
+require 'csv'
 
-# Ruta para el formulario de carga de archivo
 get '/' do
-  erb :index
+  erb :exportador
 end
 
-# Ruta para manejar la carga de archivos y mostrar la página de exportación
 post '/upload' do
-  file = params[:file]
-  if file
-    content = file[:tempfile].read.split("\n")
-    erb :exportador, locals: { content: content }
-  else
-    erb :exportador, locals: { content: [] }
-  end
+  content = params[:file][:tempfile].read
+  @resultado = content
+  erb :exportador
 end
 
-# Ruta para descargar en diferentes formatos
-get '/download/:format' do |format|
-  content = params[:content]
+get '/generate/:format' do |format|
+  content_type 'text/plain'
   case format
   when 'csv'
-    csv = content.map { |line| "#{line},a#{line}@unison.mx" }.join("\n")
-    send_file("participantes.csv", type: 'text/csv', filename: 'participantes.csv')
+    generate_csv(params[:data])
   when 'json'
-    json = content.map { |line| { expediente: line, correo: "a#{line}@unison.mx" } }
-    send_file("participantes.json", type: 'application/json', filename: 'participantes.json')
+    generate_json(params[:data])
   when 'sql'
-    sql = <<~SQL
-      CREATE DATABASE IF NOT EXISTS evento;
-      USE evento;
-      CREATE TABLE IF NOT EXISTS asistentes(expediente INT NOT NULL, correo VARCHAR(255) NOT NULL);
-      #{content.map { |line| "INSERT INTO asistentes (expediente, correo) VALUES (#{line},'a#{line}@unison.mx');" }.join}
-    SQL
-    send_file("participantes.sql", type: 'text/plain', filename: 'participantes.sql')
+    generate_sql(params[:data])
   when 'xml'
-    xml = <<~XML
-      <?xml version="1.0" encoding="UTF-8"?>
-      <asistentes>
-      #{content.map { |line| "  <asistente>\n    <expediente>#{line}</expediente>\n    <correo>a#{line}@unison.mx</correo>\n  </asistente>" }}
-      </asistentes>
-    XML
-    send_file("participantes.xml", type: 'application/xml', filename: 'participantes.xml')
+    generate_xml(params[:data])
   else
-    status 404
-    'Formato de descarga no válido'
+    'Formato no soportado'
   end
 end
 
-# Plantilla para la página de carga de archivo
-__END__
+def generate_csv(content)
+  lines = content.split("\n")
+  output = lines.map { |line| "#{line}, a#{line}@unison.mx" }
+  content_type 'text/csv'
+  attachment 'participantes.csv'
+  output.join("\n")
+end
 
-@@ index
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Cargar archivo con Ruby</title>
-</head>
-<body>
-  <h1>Cargar archivo con Ruby</h1>
-  <form action="/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="file" />
-    <input type="submit" value="Cargar archivo" />
-  </form>
-</body>
-</html>
+def generate_json(content)
+  lines = content.split("\n")
+  data = lines.map { |line| { expediente: line, correo: "a#{line}@unison.mx"}}
+  attachment 'participantes.json'
+  data.to_json
+end
 
-# Plantilla para la página de exportación
-@@ exportador
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Exportar datos</title>
-</head>
-<body>
-  <h1>Exportar datos</h1>
-  <pre><%= content.join("\n") %></pre>
-  <a href="/download/csv">CSV</a>
-  <a href="/download/json">JSON</a>
-  <a href="/download/sql">SQL</a>
-  <a href="/download/xml">XML</a>
-</body>
-</html>
+def generate_sql(content)
+  lines = content.split("\n")
+  sql = "CREATE DATABASE IF NOT EXISTS evento;\nUSE evento;\nCREATE TABLE IF NOT EXISTS asistentes(expediente INT NOT NULL, correo VARCHAR(255) NOT NULL);\nINSERT INTO asistentes (expediente, correo) VALUES\n"
+  lines.each { |line| sql += "('#{line}','a#{line}@unison.mx'),\n" }
+  sql = sql.chomp(",\n") + ";"
+  attachment 'participantes.sql'
+  sql
+end
+
+def generate_xml(content)
+  lines = content.split("\n")
+  xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<asistentes>\n"
+  lines.each { |line| xml += " <asistente>\n <expediente>#{line}</expediente>\n <correo>a#{line}@unison.mx</correo>\n </asistente>\n" }
+  xml += "</asistentes>"
+  attachment 'participantes.xml'
+  xml
+end
